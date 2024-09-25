@@ -1,0 +1,48 @@
+// Fake Phone Call Functionality
+function startFakeCall() {
+    const fakeCallDiv = document.getElementById('fakeCall');
+    fakeCallDiv.style.display = 'block';
+    setTimeout(() => {
+        alert("Incoming fake call...");
+    }, 2000);  // Simulate ringing after 2 seconds
+}
+
+// End fake call function
+function endCall() {
+    const fakeCallDiv = document.getElementById('fakeCall');
+    fakeCallDiv.style.display = 'none';
+}
+
+// Creep-O-Meter (Using TensorFlow.js for Sentiment Analysis)
+function startCreepOMeter() {
+    const creepOMeterDiv = document.getElementById('creepOMeter');
+    creepOMeterDiv.style.display = 'block';
+
+    // Example: Start listening and analyzing speech (you'll need TensorFlow.js to implement this)
+    // Simulate analyzing speech
+    setTimeout(() => {
+        alert("Creep-O-Meter detected suspicious speech!");
+    }, 5000);  // 5 seconds of simulated speech analysis
+}
+
+// Escape Route Planner (Using WebGL for AR Escape Routes)
+function startEscapePlan() {
+    const escapePlanDiv = document.getElementById('escapePlan');
+    escapePlanDiv.style.display = 'block';
+
+    // Example: Start AR escape route analysis using WebGL (this would require more complex WebGL setup)
+    setTimeout(() => {
+        alert("Escape route detected! Follow the green line to the exit.");
+    }, 3000);  // 3 seconds of simulated scanning
+}
+
+// Self Defense Tips
+function showSelfDefense() {
+    const selfDefenseDiv = document.getElementById('selfDefense');
+    selfDefenseDiv.style.display = 'block';
+}
+
+// Event RSVP Functionality
+function rsvp() {
+    alert("You have successfully RSVP'd to the event!");
+}

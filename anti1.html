@@ -1,0 +1,7 @@
+navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+.then(stream => {
+    console.log('Microphone access granted.');
+})
+.catch(err => {
+    console.log('Microphone access denied: ', err);
+});
