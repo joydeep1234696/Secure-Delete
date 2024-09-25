@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antisoch - Socializing with Safety</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <h1>Antisoch</h1>
+        <p>Your safety net for social events</p>
+    </header>
+
+    <div class="container">
+        <h2>Upcoming Events</h2>
+        <ul class="party-list">
+            <li class="party-item">
+                <h3>Chill Gathering at Anna's Place</h3>
+                <p>Location: Downtown</p>
+                <p>Date: September 30th, 7 PM</p>
+                <button class="btn-primary" onclick="rsvp()">RSVP</button>
+            </li>
+            <li class="party-item">
+                <h3>Board Game Night</h3>
+                <p>Location: John’s Loft</p>
+                <p>Date: October 1st, 8 PM</p>
+                <button class="btn-primary" onclick="rsvp()">RSVP</button>
+            </li>
+            <li class="party-item">
+                <h3>Movie Marathon Party</h3>
+                <p>Location: Sarah’s House</p>
+                <p>Date: October 5th, 6 PM</p>
+                <button class="btn-primary" onclick="rsvp()">RSVP</button>
+            </li>
+        </ul>
+
+        <!-- Buttons for features -->
+        <div class="button-container">
+            <button class="btn-fakecall" onclick="startFakeCall()">
+                <i class="fas fa-phone-alt"></i> Trigger Fake Phone Call
+            </button>
+            <button class="btn-creepometer" onclick="startCreepOMeter()">
+                <i class="fas fa-user-secret"></i> Start Creep-O-Meter
+            </button>
+            <button class="btn-selfdefense" onclick="showSelfDefense()">
+                <i class="fas fa-shield-alt"></i> View Self-Defense Tips
+            </button>
+            <button class="btn-escapeplan" onclick="startEscapePlan()">
+                <i class="fas fa-route"></i> Start Escape Route Planner
+            </button>
+        </div>
+
+        <!-- Feature Sections -->
+        <div class="feature-section" id="fakeCall">...</div>
+        <div class="feature-section" id="creepOMeter">...</div>
+        <div class="feature-section" id="selfDefense">...</div>
+        <div class="feature-section" id="escapePlan">...</div>
+
+    </div>
+
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    <script src="scripts.js"></script>
+</body>
+</html>

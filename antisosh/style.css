@@ -1,0 +1,136 @@
+/* Base Styling */
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #7f7fd5, #86a8e7, #91eae4);
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+header {
+    background-color: #444;
+    color: white;
+    text-align: center;
+    padding: 20px 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+header h1 {
+    font-size: 2.5em;
+    margin: 0;
+}
+header p {
+    font-size: 1.2em;
+    margin-top: 5px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 30px auto;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+h2 {
+    text-align: center;
+    font-size: 2em;
+    margin-bottom: 20px;
+}
+
+/* Party List Styling */
+.party-list {
+    list-style: none;
+    padding: 0;
+}
+.party-item {
+    background: #e0f7fa;
+    border-left: 5px solid #00acc1;
+    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    transition: transform 0.2s ease-in-out;
+}
+.party-item:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+.party-item h3 {
+    margin-top: 0;
+}
+
+/* Buttons */
+button {
+    display: inline-block;
+    background-color: #008CBA;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #005f6b;
+}
+.button-container {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin-top: 30px;
+}
+button i {
+    margin-right: 8px;
+}
+
+/* Button Variations */
+.btn-primary {
+    background-color: #1E88E5;
+}
+.btn-primary:hover {
+    background-color: #1565C0;
+}
+.btn-fakecall {
+    background-color: #8E24AA;
+}
+.btn-fakecall:hover {
+    background-color: #6A1B9A;
+}
+.btn-creepometer {
+    background-color: #D32F2F;
+}
+.btn-creepometer:hover {
+    background-color: #C62828;
+}
+.btn-selfdefense {
+    background-color: #43A047;
+}
+.btn-selfdefense:hover {
+    background-color: #388E3C;
+}
+.btn-escapeplan {
+    background-color: #F57C00;
+}
+.btn-escapeplan:hover {
+    background-color: #EF6C00;
+}
+
+/* Feature Sections */
+.feature-section {
+    display: none;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .button-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    button {
+        margin-bottom: 10px;
+    }
+}
