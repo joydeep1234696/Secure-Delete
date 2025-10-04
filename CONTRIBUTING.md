@@ -6,7 +6,7 @@ Thanks for your interest in improving `secure\_delete`!
 
 
 
-\## 🧩 Code Style
+\## Code Style
 
 \- Follow \*\*Rust 2021\*\* edition conventions.
 
@@ -18,7 +18,7 @@ Thanks for your interest in improving `secure\_delete`!
 
 
 
-\## 🧪 Development Workflow
+\## Development Workflow
 
 1\. Fork the repository.
 
@@ -44,7 +44,7 @@ Push and open a Pull Request against main.
 
 
 
-🧰 Testing
+Testing
 
 Run the build and ensure no regressions:
 
@@ -70,13 +70,13 @@ Compare before/after with a hex viewer or recovery utility.
 
 
 
-📜 Documentation
+Documentation
 
 If you add a feature, please update README.md accordingly.
 
 
 
-💬 Communication
+Communication
 
 Open an Issue for:
 
