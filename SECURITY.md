@@ -20,9 +20,9 @@ If you discover a potential vulnerability:
 
 2\. Contact the maintainer privately via:
 
-&nbsp;  - Email: security@whisprer.io \*(placeholder)\*
+   - Email: security@whispr.dev
 
-&nbsp;  - Or via GitHub’s “Report a vulnerability” feature.
+   - Or via GitHub’s “Report a vulnerability” feature.
 
 
 
@@ -32,7 +32,7 @@ We aim to respond within \*\*72 hours\*\*.
 
 \## Security Scope
 
-This project focuses on \*software-level\* secure deletion of specified files and folders.  
+This project focuses on \*software-level\* secure deletion of specified files and folders.
 
 It \*\*does not\*\* claim full physical sanitization of storage media (especially SSDs or cloud drives).
 
