@@ -1,0 +1,111 @@
+name: Secure Delete - Rust Build, Sign & Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # e.g. v0.1.0, v1.2.3
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and Package
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: secure_delete-linux
+            ext: ''
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: secure_delete-windows
+            ext: .exe
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: secure_delete-macos
+            ext: ''
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Prepare dist folder
+        shell: bash
+        run: mkdir -p dist
+
+      - name: Copy and strip binary
+        shell: bash
+        run: |
+          BIN="target/${{ matrix.target }}/release/secure_delete${{ matrix.ext }}"
+          OUT="dist/${{ matrix.artifact_name }}${{ matrix.ext }}"
+          cp "$BIN" "$OUT"
+          strip "$OUT" || true
+
+      - name: Package zip
+        shell: bash
+        run: |
+          cd dist
+          zip "${{ matrix.artifact_name }}.zip" "${{ matrix.artifact_name }}${{ matrix.ext }}"
+
+      - name: Generate SHA256 checksum
+        shell: bash
+        run: |
+          cd dist
+          sha256sum "${{ matrix.artifact_name }}.zip" > "${{ matrix.artifact_name }}.sha256"
+
+      - name: Import GPG key
+        if: env.GPG_PRIVATE_KEY != ''
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          gpg --list-keys
+
+      - name: Sign artifacts (binary + checksum)
+        if: env.GPG_PRIVATE_KEY != ''
+        env:
+          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        shell: bash
+        run: |
+          cd dist
+          gpg --batch --yes --passphrase "$PASSPHRASE" --armor --detach-sign "${{ matrix.artifact_name }}.zip"
+          gpg --batch --yes --passphrase "$PASSPHRASE" --armor --detach-sign "${{ matrix.artifact_name }}.sha256"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/*
+
+  release:
+    name: Publish Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release_binaries
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release_binaries/**/*.{zip,sha256,asc}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
