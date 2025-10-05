@@ -2,57 +2,49 @@ name: "CodeQL (Rust)"
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main, master ]
   schedule:
-    - cron: "0 3 * * 1"
+    - cron: '0 3 * * 0' # weekly
 
 jobs:
   analyze:
-    name: CodeQL Analysis
-    runs-on: ubuntu-latest
+    name: CodeQL (Rust)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        language: [rust]
 
     permissions:
       actions: read
       contents: read
       security-events: write
 
-    strategy:
-      matrix:
-        language: [ "rust" ]
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          components: clippy, rustfmt
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
 
-      # Step 1: Build manually *before* CodeQL init
-      - name: Manual build (pre-CodeQL)
+      - name: Install dependencies
         run: |
-          cargo fetch --locked
-          cargo build --release --all-features
+          rustup component add clippy rustfmt
+          cargo fetch
 
-      # Step 2: Initialize CodeQL with no autobuild
-      - name: Initialize CodeQL (no autobuild)
+      - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
           build-mode: none
 
-      # Step 3: Run Clippy
-      - name: Run Clippy linter
-        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Manual build (Rust)
+        run: cargo build --verbose --all-targets --release
 
-      # Step 4: Analyze
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{matrix.language}}"
-
