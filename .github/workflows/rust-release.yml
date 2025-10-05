@@ -95,13 +95,11 @@ jobs:
           echo "$GPG_PRIVATE_KEY" | gpg --batch --import
           echo "$GPG_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --quick-set-expire $(gpg --list-secret-keys --with-colons | awk -F: '/^sec/{print $5; exit}') 1y
 
-      - name: Sign artifacts (binary + checksum)
-        env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Generate SHA256 checksum
         run: |
           cd dist
-          gpg --batch --yes --passphrase "$GPG_PASSPHRASE" --detach-sign "$ZIP_NAME"
-          gpg --batch --yes --passphrase "$GPG_PASSPHRASE" --detach-sign "${ZIP_NAME%.zip}.sha256"
+          base_name=$(basename "$ZIP_NAME" .zip)
+          sha256sum "$ZIP_NAME" > "${base_name}.sha256"
 
       # -----------------------------
       # 🚀 Upload Artifacts
@@ -109,9 +107,9 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.target }}
+          name: ${{ env.ZIP_NAME }}
           path: |
             dist/${{ env.ZIP_NAME }}
             dist/${{ env.ZIP_NAME }}.sig
-            dist/${{ env.ZIP_NAME%.zip}}.sha256
-            dist/${{ env.ZIP_NAME%.zip}}.sha256.sig
+            dist/*.sha256
+            dist/*.sha256.sig
