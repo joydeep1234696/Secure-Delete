@@ -63,11 +63,22 @@ jobs:
             sudo apt-get update && sudo apt-get install -y zip
           fi
 
+      - name: Determine OS suffix
+        id: os_suffix
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            echo "SUFFIX=windows" >> $GITHUB_ENV
+          elif [ "${{ runner.os }}" = "macOS" ]; then
+            echo "SUFFIX=macos" >> $GITHUB_ENV
+          else
+            echo "SUFFIX=linux" >> $GITHUB_ENV
+          fi
+
       - name: Package binaries
         shell: bash
         run: |
           cd dist
-          ZIP_FILE="secure_delete-${{ runner.os | toLowerCase }}.zip"
+          ZIP_FILE="secure_delete-${SUFFIX}.zip"
           zip -j "$ZIP_FILE" ./* || true
           ls -lh
 
@@ -76,9 +87,9 @@ jobs:
         run: |
           cd dist
           if [ "${{ runner.os }}" = "macOS" ]; then
-            shasum -a 256 *.zip > secure_delete-${{ runner.os | toLowerCase }}.sha256
+            shasum -a 256 *.zip > secure_delete-${SUFFIX}.sha256
           else
-            sha256sum *.zip > secure_delete-${{ runner.os | toLowerCase }}.sha256
+            sha256sum *.zip > secure_delete-${SUFFIX}.sha256
           fi
           cat *.sha256
 
@@ -102,7 +113,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: secure_delete-${{ matrix.os }}
+          name: secure_delete-${{ env.SUFFIX }}
           path: dist/*
 
   release:
