@@ -1,0 +1,63 @@
+name: CodeQL Analysis
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  schedule:
+    - cron: '0 4 * * 1'  # Every Monday at 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  analyze:
+    name: CodeQL (Rust)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: rust
+          # Use a specific build mode to help CodeQL match binaries with sources
+          build-mode: autobuild
+
+      - name: Autobuild
+        run: |
+          echo "Building project for CodeQL analysis..."
+          cargo build --release
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "security"
+          output: sarif-results
+
+      - name: Upload SARIF results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: sarif-results
+          category: "codeql-rust"
+
+      - name: Archive CodeQL database (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeql-database-${{ matrix.os }}
+          path: /home/runner/work/_temp/codeql_databases
+          retention-days: 7
