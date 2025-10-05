@@ -33,30 +33,29 @@ jobs:
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Prepare artifact
-        shell: bash
+      # --- Windows: use PowerShell Compress-Archive ---
+      - name: Package (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item "target\x86_64-pc-windows-msvc\release\secure_delete.exe" "dist\secure_delete.exe"
+          Compress-Archive -Path "dist\secure_delete.exe" -DestinationPath "dist\secure_delete-windows.zip"
+
+      # --- macOS/Linux: use zip ---
+      - name: Package (Unix)
+        if: matrix.os != 'windows-latest'
         run: |
           mkdir -p dist
-          BIN="target/${{ matrix.target }}/release/secure_delete"
-          if [[ "${{ matrix.os }}" == "Windows" ]]; then
-            BIN="${BIN}.exe"
-          fi
-          OUT="dist/$(basename "$BIN")"
-          cp "$BIN" "$OUT" || exit 1
-          strip "$OUT" || true
-
-      - name: Package zip
-        run: |
-          cd dist
-          if [ "${{ matrix.os }}" = "Windows" ]; then
-            pwsh -Command "Compress-Archive -Path secure_delete.exe -DestinationPath secure_delete-windows.zip"
-          elif [ "${{ matrix.os }}" = "macOS" ]; then
-            zip -j secure_delete-macos.zip secure_delete
+          cp "target/${{ matrix.target }}/release/secure_delete" dist/
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            zip -j dist/secure_delete-macos.zip dist/secure_delete
           else
-            zip -j secure_delete-linux.zip secure_delete
+            zip -j dist/secure_delete-linux.zip dist/secure_delete
           fi
 
       - name: Generate SHA256 checksum
+        shell: bash
         run: |
           cd dist
           for f in *.zip; do
@@ -65,12 +64,16 @@ jobs:
           done
 
       - name: Import GPG key
+        if: env.GPG_PRIVATE_KEY != ''
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        shell: bash
         run: |
           echo "$GPG_PRIVATE_KEY" | gpg --batch --import
 
       - name: Sign artifacts
+        if: env.GPG_PRIVATE_KEY != ''
+        shell: bash
         run: |
           cd dist
           for f in *.zip *.sha256; do
