@@ -97,10 +97,12 @@ jobs:
 
       - name: Import GPG key (if provided)
         if: env.GPG_PRIVATE_KEY != ''
+        shell: bash
         run: |
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          echo "$GPG_PRIVATE_KEY" | base64 --decode > private.asc || echo "$GPG_PRIVATE_KEY" > private.asc
+          echo "Importing GPG key..."
+          gpg --batch --import private.asc
+          gpg --list-secret-keys || true
 
       - name: Sign checksum with GPG
         if: env.GPG_PRIVATE_KEY != ''
