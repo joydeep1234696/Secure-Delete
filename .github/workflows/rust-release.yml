@@ -21,95 +21,64 @@ jobs:
             target: x86_64-pc-windows-msvc
 
     steps:
-      # -----------------------------
-      # 🧰 Checkout and Setup
-      # -----------------------------
       - name: Checkout source
         uses: actions/checkout@v4
 
       - name: Set up Rust
-        uses: actions-rs/toolchain@v1
+        uses: actions/setup-rust@v2
         with:
-          toolchain: stable
+          rust-version: stable
           target: ${{ matrix.target }}
-          override: true
 
-      # -----------------------------
-      # ⚙️ Build Binary
-      # -----------------------------
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Prepare dist folder
-        run: mkdir -p dist
-
-      - name: Copy and strip binary
-        if: runner.os != 'Windows'
-        run: |
-          cp target/${{ matrix.target }}/release/secure_delete dist/
-          strip dist/secure_delete || true
-
-      - name: Copy Windows binary
-        if: runner.os == 'Windows'
-        run: |
-          copy target\${{ matrix.target }}\release\secure_delete.exe dist\
-
-      # -----------------------------
-      # 📦 Package Zip
-      # -----------------------------
-      - name: Package zip
+      - name: Prepare artifact
+        shell: bash
         run: |
           mkdir -p dist
-          BINARY_PATH="$(pwd)/target/${{ matrix.target }}/release"
-          cd dist
-          
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            zipname="secure_delete-windows.zip"
-            pwsh -Command "Compress-Archive -Path '${BINARY_PATH}\\secure_delete.exe' -DestinationPath '${PWD}\\${zipname}'"
-          elif [ "$RUNNER_OS" = "macOS" ]; then
-            zipname="secure_delete-macos.zip"
-            zip -j "$zipname" "$BINARY_PATH/secure_delete"
-          else
-            zipname="secure_delete-linux.zip"
-            zip -j "$zipname" "$BINARY_PATH/secure_delete"
+          BIN="target/${{ matrix.target }}/release/secure_delete"
+          if [[ "${{ matrix.os }}" == "Windows" ]]; then
+            BIN="${BIN}.exe"
           fi
-          
-          echo "ZIP_NAME=$zipname" >> $GITHUB_ENV
+          OUT="dist/$(basename "$BIN")"
+          cp "$BIN" "$OUT" || exit 1
+          strip "$OUT" || true
 
-      # -----------------------------
-      # 🔐 SHA256 Checksum
-      # -----------------------------
+      - name: Package zip
+        run: |
+          cd dist
+          if [ "${{ matrix.os }}" = "Windows" ]; then
+            pwsh -Command "Compress-Archive -Path secure_delete.exe -DestinationPath secure_delete-windows.zip"
+          elif [ "${{ matrix.os }}" = "macOS" ]; then
+            zip -j secure_delete-macos.zip secure_delete
+          else
+            zip -j secure_delete-linux.zip secure_delete
+          fi
+
       - name: Generate SHA256 checksum
         run: |
           cd dist
-          sha256sum "$ZIP_NAME" > "${ZIP_NAME%.zip}.sha256"
+          for f in *.zip; do
+            base_name=$(basename "$f" .zip)
+            sha256sum "$f" > "${base_name}.sha256"
+          done
 
-      # -----------------------------
-      # 🔏 Import and Use GPG
-      # -----------------------------
       - name: Import GPG key
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           echo "$GPG_PRIVATE_KEY" | gpg --batch --import
-          echo "$GPG_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --quick-set-expire $(gpg --list-secret-keys --with-colons | awk -F: '/^sec/{print $5; exit}') 1y
 
-      - name: Generate SHA256 checksum
+      - name: Sign artifacts
         run: |
           cd dist
-          base_name=$(basename "$ZIP_NAME" .zip)
-          sha256sum "$ZIP_NAME" > "${base_name}.sha256"
+          for f in *.zip *.sha256; do
+            gpg --batch --yes --detach-sign --armor "$f"
+          done
 
-      # -----------------------------
-      # 🚀 Upload Artifacts
-      # -----------------------------
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ZIP_NAME }}
-          path: |
-            dist/${{ env.ZIP_NAME }}
-            dist/${{ env.ZIP_NAME }}.sig
-            dist/*.sha256
-            dist/*.sha256.sig
+          name: secure_delete-${{ matrix.os }}
+          path: dist/*
