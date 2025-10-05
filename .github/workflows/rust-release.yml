@@ -21,54 +21,100 @@ jobs:
             target: x86_64-pc-windows-msvc
 
     steps:
+      # 1) Checkout
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 2) Install Rust (this is the correct, maintained action)
       - name: Install Rust
-        uses: rust-lang/setup-rust@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          rust-version: stable
-          target: ${{ matrix.target }}
+          toolchain: stable
+          targets: ${{ matrix.target }}
 
+      # 3) Build
       - name: Build release
         run: cargo build --release --target ${{ matrix.target }}
 
-      # WINDOWS
+      # 4) Set packaging variables (one place, used by later steps)
+      - name: Set packaging vars
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            echo "ZIP_NAME=secure_delete-windows.zip" >> $GITHUB_ENV
+            echo "BIN=target/${{ matrix.target }}/release/secure_delete.exe" >> $GITHUB_ENV
+          elif [ "$RUNNER_OS" = "macOS" ]; then
+            echo "ZIP_NAME=secure_delete-macos.zip" >> $GITHUB_ENV
+            echo "BIN=target/${{ matrix.target }}/release/secure_delete" >> $GITHUB_ENV
+          else
+            echo "ZIP_NAME=secure_delete-linux.zip" >> $GITHUB_ENV
+            echo "BIN=target/${{ matrix.target }}/release/secure_delete" >> $GITHUB_ENV
+          fi
+
+      # 5) Package — Windows (PowerShell, no zip.exe needed)
       - name: Package (Windows)
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item "target\x86_64-pc-windows-msvc\release\secure_delete.exe" "dist\secure_delete.exe"
-          Compress-Archive -Path "dist\secure_delete.exe" -DestinationPath "dist\secure_delete-windows.zip"
+          Copy-Item "$env:BIN" "dist\secure_delete.exe"
+          Compress-Archive -Path "dist\secure_delete.exe" -DestinationPath "dist\$env:ZIP_NAME"
           Get-ChildItem dist
 
-      # LINUX + MACOS
+      # 6) Package — macOS/Linux (zip present on runners)
       - name: Package (Unix)
         if: matrix.os != 'windows-latest'
         shell: bash
         run: |
           mkdir -p dist
-          cp target/${{ matrix.target }}/release/secure_delete dist/
-          if [ "${{ matrix.os }}" = "macos-latest" ]; then
-            zip -j dist/secure_delete-macos.zip dist/secure_delete
-          else
-            zip -j dist/secure_delete-linux.zip dist/secure_delete
-          fi
+          cp "$BIN" dist/
+          zip -j "dist/$ZIP_NAME" "dist/$(basename "$BIN")"
           ls -lh dist
 
+      # 7) SHA256 checksums (use shasum on macOS, sha256sum elsewhere)
       - name: SHA256 checksum
         shell: bash
         run: |
           cd dist
-          for f in *.zip; do
-            sha256sum "$f" > "${f%.zip}.sha256"
-          done
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            shasum -a 256 "$ZIP_NAME" > "${ZIP_NAME%.zip}.sha256"
+          else
+            sha256sum "$ZIP_NAME" > "${ZIP_NAME%.zip}.sha256"
+          fi
           ls -lh
 
+      # 8) Optional GPG signing (skips gracefully if no secret or no gpg)
+      - name: Import GPG key
+        if: ${{ secrets.GPG_PRIVATE_KEY != '' }}
+        shell: bash
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          if ! command -v gpg >/dev/null 2>&1; then
+            echo "gpg not installed on this runner; skipping signing."
+            exit 0
+          fi
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import || true
+          gpg --list-keys || true
+
+      - name: Sign artifacts
+        if: ${{ secrets.GPG_PRIVATE_KEY != '' }}
+        shell: bash
+        run: |
+          if ! command -v gpg >/dev/null 2>&1; then
+            echo "gpg not installed on this runner; skipping signing."
+            exit 0
+          fi
+          cd dist
+          for f in "$ZIP_NAME" "${ZIP_NAME%.zip}.sha256"; do
+            [ -f "$f" ] && gpg --batch --yes --detach-sign --armor "$f" || true
+          done
+
+      # 9) Upload artifacts
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: secure_delete-${{ matrix.os }}
           path: dist/*
+
 
