@@ -1,17 +1,17 @@
-name: Build and Release Secure Delete
+name: Build and Release (Cross-Platform)
 
 on:
   push:
-    tags:
-      - "v*.*.*"
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "Cargo.toml"
   workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   build:
-    name: Build (${{ matrix.os }}, ${{ matrix.target }})
+    name: Build and Package (${{ matrix.os }}, ${{ matrix.target }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -30,95 +30,76 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
           targets: ${{ matrix.target }}
 
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Set environment variables
+      - name: Prepare artifacts
         shell: bash
         run: |
           mkdir -p dist
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            echo "ZIP_NAME=secure_delete-windows.zip" >> $GITHUB_ENV
-            echo "BIN=target/${{ matrix.target }}/release/secure_delete.exe" >> $GITHUB_ENV
-          elif [ "$RUNNER_OS" = "macOS" ]; then
-            echo "ZIP_NAME=secure_delete-macos.zip" >> $GITHUB_ENV
-            echo "BIN=target/${{ matrix.target }}/release/secure_delete" >> $GITHUB_ENV
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            BIN="target/${{ matrix.target }}/release/secure_delete.exe"
+            OUT="dist/secure_delete-windows.exe"
+          elif [ "${{ runner.os }}" = "macOS" ]; then
+            BIN="target/${{ matrix.target }}/release/secure_delete"
+            OUT="dist/secure_delete-macos"
           else
-            echo "ZIP_NAME=secure_delete-linux.zip" >> $GITHUB_ENV
-            echo "BIN=target/${{ matrix.target }}/release/secure_delete" >> $GITHUB_ENV
+            BIN="target/${{ matrix.target }}/release/secure_delete"
+            OUT="dist/secure_delete-linux"
+          fi
+          cp "$BIN" "$OUT"
+          ls -lh dist
+
+      - name: Install zip utility if missing
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            choco install zip -y
+          elif [ "${{ runner.os }}" = "macOS" ]; then
+            brew install zip || true
+          else
+            sudo apt-get update && sudo apt-get install -y zip
           fi
 
       - name: Package binaries
         shell: bash
         run: |
-          mkdir -p dist
-          BIN="target/${{ matrix.target }}/release/secure_delete${{ matrix.os == 'windows-latest' && '.exe' || '' }}"
-          ZIP_NAME="secure_delete-${{ matrix.os == 'windows-latest' && 'windows' || (matrix.os == 'macos-latest' && 'macos' || 'linux') }}.zip"
-          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
-
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            echo "Using PowerShell compression on Windows"
-            pwsh -Command "Compress-Archive -Path '$BIN' -DestinationPath 'dist/$ZIP_NAME'"
-          else
-            echo "Using zip on $RUNNER_OS"
-            zip -j "dist/$ZIP_NAME" "$BIN"
-          fi
-
-          echo "Created archive:"
-          ls -lh dist
+          cd dist
+          ZIP_FILE="secure_delete-${{ runner.os | toLowerCase }}.zip"
+          zip -j "$ZIP_FILE" ./* || true
+          ls -lh
 
       - name: Generate SHA256 checksum
         shell: bash
         run: |
-          echo "Listing dist folder contents before hashing:"
-          ls -lh dist || true
-
           cd dist
-          ZIP_FILE="${{ env.ZIP_NAME }}"
-
-          if [ ! -f "$ZIP_FILE" ]; then
-            echo "ERROR: Expected zip file '$ZIP_FILE' not found!"
-            echo "Available files:"
-            ls -lh
-            exit 1
-          fi
-
-          if [ "$RUNNER_OS" = "macOS" ]; then
-            echo "Using shasum on macOS"
-            shasum -a 256 "$ZIP_FILE" > "${ZIP_FILE}.sha256"
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            shasum -a 256 *.zip > secure_delete-${{ runner.os | toLowerCase }}.sha256
           else
-            echo "Using sha256sum on $RUNNER_OS"
-            sha256sum "$ZIP_FILE" > "${ZIP_FILE}.sha256"
+            sha256sum *.zip > secure_delete-${{ runner.os | toLowerCase }}.sha256
           fi
+          cat *.sha256
 
-          echo "Checksum generated successfully:"
-          cat "${ZIP_FILE}.sha256"
-
-      - name: Import GPG key
+      - name: Import GPG key (if provided)
         if: env.GPG_PRIVATE_KEY != ''
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-        shell: bash
         run: |
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import || true
-          gpg --list-keys || true
-
-      - name: Sign artifacts (optional)
-        if: env.GPG_PRIVATE_KEY != ''
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+
+      - name: Sign checksum with GPG
+        if: env.GPG_PRIVATE_KEY != ''
         shell: bash
         run: |
           cd dist
-          for f in "$ZIP_NAME" "${ZIP_NAME%.zip}.sha256"; do
-            [ -f "$f" ] && gpg --batch --yes --detach-sign --armor "$f" || true
+          for f in *.sha256; do
+            gpg --batch --yes --armor --detach-sign "$f"
           done
           ls -lh
 
-      - name: Upload build artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: secure_delete-${{ matrix.os }}
@@ -129,9 +110,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -143,10 +121,26 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          name: "Secure Delete – Auto Build ${{ github.run_number }}"
+          tag_name: "build-${{ github.sha }}"
+          body: |
+            🧰 **Automated Cross-Platform Release**
+
+            Commit: ${{ github.sha }}
+            Branch: ${{ github.ref_name }}
+            Build: ${{ github.run_number }}
+
+            This release includes binaries for:
+            - Windows (MSVC)
+            - macOS (Darwin)
+            - Linux (GNU)
+
+            SHA256 and GPG signatures included.
           files: |
             release_artifacts/**/*.zip
             release_artifacts/**/*.sha256
             release_artifacts/**/*.asc
           generate_release_notes: true
+          overwrite_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
