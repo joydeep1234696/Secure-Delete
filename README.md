@@ -1,5 +1,5 @@
 # Secure-Delete
-Tool for secure deletion simply and soley
+<div align="center"><img src="https://github.com/whispr-specops/secure-delete/blob/main/assets/secure-delete-logo.png?raw=true" width="400" alt="secure delte logo"><p><i>The tool for deletion 'n shredding nothing else, but it's good for this!</i></p></div>
 
 
 \# Secure Delete
@@ -22,7 +22,7 @@ It overwrites data multiple times using configurable patterns (`zeros`, `ones`, 
 \- \*\*Recursive directory deletion:\*\* Securely wipes entire folders.
 \- \*\*File rename before removal:\*\* Random filename substitution before unlink.
 \- \*\*Permission handling:\*\* Clears read-only flags before overwrite.
-\- \*\*No external dependencies:\*\* Only uses `rand` crate and Rust’s standard library.
+- \*\*No external dependencies:\*\* Only uses `rand` crate and Rust’s standard library.
 
 ---
 
@@ -92,17 +92,14 @@ cargo build --release
 ```
 
 License
-Licensed under the Hybrid License
- (you can replace with your Hybrid License as desired).
+Licensed under the Hybrid License.
 
 Contributing
 Pull requests and forks are welcome!
-See CONTRIBUTING.md
- for style and patch guidelines.
+See CONTRIBUTING.md for style and patch guidelines.
 
 Security
-Please read SECURITY.md
- before reporting vulnerabilities.
+Please read SECURITY.md before reporting vulnerabilities.
 
 Credits
 Created by whisprer (wofl / husklfren)
