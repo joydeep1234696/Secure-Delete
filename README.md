@@ -26,7 +26,7 @@ It overwrites data multiple times using configurable patterns (`zeros`, `ones`, 
 
 ---
 
-[![Build and Package](https://github.com/whisprer-specops/Secure-Delete/actions/workflows/rust-release.yml/badge.svg?event=workflow_run)](https://github.com/whisprer-specops/Secure-Delete/actions/workflows/rust-release.yml)
+[![Build and Package](https://github.com/whisprer-specops/Secure-Delete/actions/workflows/rust-release.yml/badge.svg)](https://github.com/whisprer-specops/Secure-Delete/actions/workflows/rust-release.yml)
 
 ---
 
