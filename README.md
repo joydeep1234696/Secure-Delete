@@ -26,7 +26,7 @@ It overwrites data multiple times using configurable patterns (`zeros`, `ones`, 
 
 ---
 
-[![Build and Package](https://github.com/whisprer-specops/Secure-Delete/actions/workflows/rust-release.yml/badge.svg)](https://github.com/whisprer-specops/Secure-Delete/actions/workflows/rust-release.yml) [![Build and Release](https://github.com/whisprer-specops/Secure-Delete/actions/workflows/rust-release-update.yml/badge.svg)](https://github.com/whisprer-specops/Secure-Delete/actions/workflows/rust-release-update.yml)
+[![Build and Package](https://github.com/whisprer-specops/Secure-Delete/actions/workflows/rust-release.yml/badge.svg)](https://github.com/whisprer-specops/Secure-Delete/actions/workflows/rust-release.yml) [![Build and Release](https://github.com/whisprer-specops/Secure-Delete/actions/workflows/rust-release-update.yml/badge.svg)](https://github.com/whisprer-specops/Secure-Delete/actions/workflows/rust-release-update.yml) [![.github/workflows/codeql.yml](https://github.com/whisprer-specops/Secure-Delete/actions/workflows/codeql.yml/badge.svg?event=push)](https://github.com/whisprer-specops/Secure-Delete/actions/workflows/codeql.yml)
 
 ---
 
