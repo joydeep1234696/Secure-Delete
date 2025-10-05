@@ -40,27 +40,27 @@ It overwrites data multiple times using configurable patterns (`zeros`, `ones`, 
 ```bash
 git clone https://github.com/whisprer/secure\_delete.git
 cd secure\_delete
-cargo build --release
+cargo build --release```
 The compiled binary will be available at:
-target/release/secure_delete
+`target/release/secure_delete`
 
 Optional
 To install system-wide:
-cargo install --path .
+`cargo install --path` .
 
 Usage
 Syntax
-secure_delete <file-or-directory> [--passes N] [--pattern zeros|ones|random] [--confirm]
+`secure_delete <file-or-directory> [--passes N] [--pattern zeros|ones|random] [--confirm]`
 
 Examples
 Securely delete a file:
-secure_delete secret.txt --passes 5 --pattern random --confirm
+`secure_delete secret.txt --passes 5 --pattern random --confirm`
 
 Wipe an entire directory:
-secure_delete ./sensitive_data --passes 3 --pattern random --confirm
+`secure_delete ./sensitive_data --passes 3 --pattern random --confirm`
 
 Quick delete without confirmation:
-secure_delete notes.tmp
+`secure_delete notes.tmp`
 
 Design Philosophy
 secure_delete emphasizes:
@@ -77,16 +77,16 @@ No free-space wiping: This tool targets specified files/directories only.
 
 Development
 Project structure
-secure_delete/
+```secure_delete/
 ├─ Cargo.toml
 └─ src/
-   └─ main.rs
+   └─ main.rs```
 
 Build commands
-cargo fmt
+```cargo fmt
 cargo clippy
 cargo test
-cargo build --release
+cargo build --release```
 
 License
 Licensed under the Hybrid License
