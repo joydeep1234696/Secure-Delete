@@ -65,14 +65,16 @@ jobs:
 
       - name: Determine OS suffix
         id: os_suffix
+        shell: bash
         run: |
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            echo "SUFFIX=windows" >> $GITHUB_ENV
-          elif [ "${{ runner.os }}" = "macOS" ]; then
-            echo "SUFFIX=macos" >> $GITHUB_ENV
-          else
-            echo "SUFFIX=linux" >> $GITHUB_ENV
-          fi
+          case "${{ runner.os }}" in
+            "Windows")
+              echo "SUFFIX=windows" >> $GITHUB_ENV ;;
+            "macOS")
+              echo "SUFFIX=macos" >> $GITHUB_ENV ;;
+            *)
+              echo "SUFFIX=linux" >> $GITHUB_ENV ;;
+          esac
 
       - name: Package binaries
         shell: bash
