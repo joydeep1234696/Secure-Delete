@@ -1,32 +1,29 @@
-name: Secure Delete - Rust Build, Sign & Release
+name: Build and Package
 
 on:
   push:
     tags:
-      - 'v*.*.*'  # e.g. v0.1.0, v1.2.3
+      - "v*.*.*"
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build and Package
+    name: Build and Package (${{ matrix.os }}, ${{ matrix.target }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: secure_delete-linux
-            ext: ''
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            artifact_name: secure_delete-windows
-            ext: .exe
           - os: macos-latest
             target: x86_64-apple-darwin
-            artifact_name: secure_delete-macos
-            ext: ''
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
 
     steps:
+      # -----------------------------
+      # 🧰 Checkout and Setup
+      # -----------------------------
       - name: Checkout source
         uses: actions/checkout@v4
 
@@ -37,25 +34,33 @@ jobs:
           target: ${{ matrix.target }}
           override: true
 
+      # -----------------------------
+      # ⚙️ Build Binary
+      # -----------------------------
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Prepare dist folder
-        shell: bash
         run: mkdir -p dist
 
       - name: Copy and strip binary
-        shell: bash
+        if: runner.os != 'Windows'
         run: |
-          BIN="target/${{ matrix.target }}/release/secure_delete${{ matrix.ext }}"
-          OUT="dist/${{ matrix.artifact_name }}${{ matrix.ext }}"
-          cp "$BIN" "$OUT"
-          strip "$OUT" || true
+          cp target/${{ matrix.target }}/release/secure_delete dist/
+          strip dist/secure_delete || true
 
+      - name: Copy Windows binary
+        if: runner.os == 'Windows'
+        run: |
+          copy target\${{ matrix.target }}\release\secure_delete.exe dist\
+
+      # -----------------------------
+      # 📦 Package Zip
+      # -----------------------------
       - name: Package zip
         run: |
           mkdir -p dist
-          BINARY_PATH="$(pwd)/target/release"
+          BINARY_PATH="$(pwd)/target/${{ matrix.target }}/release"
           cd dist
           
           if [ "$RUNNER_OS" = "Windows" ]; then
@@ -71,53 +76,42 @@ jobs:
           
           echo "ZIP_NAME=$zipname" >> $GITHUB_ENV
 
+      # -----------------------------
+      # 🔐 SHA256 Checksum
+      # -----------------------------
       - name: Generate SHA256 checksum
         run: |
           cd dist
           sha256sum "$ZIP_NAME" > "${ZIP_NAME%.zip}.sha256"
 
+      # -----------------------------
+      # 🔏 Import and Use GPG
+      # -----------------------------
       - name: Import GPG key
-        if: env.GPG_PRIVATE_KEY != ''
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           echo "$GPG_PRIVATE_KEY" | gpg --batch --import
-          gpg --list-keys
+          echo "$GPG_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --quick-set-expire $(gpg --list-secret-keys --with-colons | awk -F: '/^sec/{print $5; exit}') 1y
 
       - name: Sign artifacts (binary + checksum)
-        if: env.GPG_PRIVATE_KEY != ''
         env:
-          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        shell: bash
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           cd dist
-          gpg --batch --yes --passphrase "$PASSPHRASE" --armor --detach-sign "${{ matrix.artifact_name }}.zip"
-          gpg --batch --yes --passphrase "$PASSPHRASE" --armor --detach-sign "${{ matrix.artifact_name }}.sha256"
+          gpg --batch --yes --passphrase "$GPG_PASSPHRASE" --detach-sign "$ZIP_NAME"
+          gpg --batch --yes --passphrase "$GPG_PASSPHRASE" --detach-sign "${ZIP_NAME%.zip}.sha256"
 
+      # -----------------------------
+      # 🚀 Upload Artifacts
+      # -----------------------------
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}
-          path: dist/*
-
-  release:
-    name: Publish Release
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: release_binaries
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: release_binaries/**/*.{zip,sha256,asc}
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: ${{ matrix.target }}
+          path: |
+            dist/${{ env.ZIP_NAME }}
+            dist/${{ env.ZIP_NAME }}.sig
+            dist/${{ env.ZIP_NAME%.zip}}.sha256
+            dist/${{ env.ZIP_NAME%.zip}}.sha256.sig
