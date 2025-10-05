@@ -23,29 +23,36 @@ jobs:
         language: [ "rust" ]
 
     steps:
-      - name: Checkout source
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Rust
+      - name: Set up Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
-          components: clippy, rustfmt
+          components: rustfmt, clippy
 
+      # Initialize CodeQL without autobuild
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
+          # this prevents autobuild from being triggered
+          build-mode: none
 
-      # **Manual build instead of autobuild**
-      - name: Build project manually
+      # Manual build step (the key fix)
+      - name: Build the project manually
         run: |
           cargo fetch --locked
           cargo build --release --all-features
 
+      # Optional static analysis
+      - name: Run Clippy for linting
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      # Run the CodeQL analysis
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{matrix.language}}"
-
