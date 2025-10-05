@@ -6,11 +6,11 @@ on:
   pull_request:
     branches: [ main, master ]
   schedule:
-    - cron: '0 2 * * 0'
+    - cron: '0 2 * * 0' # Weekly
 
 jobs:
   analyze:
-    name: Analyze (Rust)
+    name: Analyze
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -27,12 +27,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: clippy, rustfmt
 
       - name: Install dependencies
         run: |
-          rustup update stable
           rustup component add clippy rustfmt
           cargo fetch
 
@@ -42,12 +45,12 @@ jobs:
           languages: ${{ matrix.language }}
           build-mode: manual
 
-      - name: Build project manually for CodeQL
+      - name: Build the project (manual build for Rust)
         run: |
-          cargo clean
           cargo build --release
+
+      - name: Run tests (optional)
+        run: cargo test --all --release
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:${{ matrix.language }}"
