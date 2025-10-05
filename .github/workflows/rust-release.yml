@@ -53,10 +53,13 @@ jobs:
           strip "$OUT" || true
 
       - name: Package zip
-        shell: bash
         run: |
-          cd dist
-          zip "${{ matrix.artifact_name }}.zip" "${{ matrix.artifact_name }}${{ matrix.ext }}"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            pwsh -Command "Compress-Archive -Path dist\* -DestinationPath dist\secure_delete-${{ matrix.target }}.zip"
+          else
+            zip -r dist/secure_delete-${{ matrix.target }}.zip dist/*
+          fi
+        shell: bash
 
       - name: Generate SHA256 checksum
         shell: bash
