@@ -1,10 +1,10 @@
 name: Build and Release
 
 on:
-  workflow_dispatch:        # manual trigger will appear again
+  workflow_dispatch:
   push:
     tags:
-      - 'v*.*.*'            # trigger on semantic version tags
+      - 'v*.*.*'
 
 permissions:
   contents: write
@@ -39,13 +39,27 @@ jobs:
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
 
+      # Fix: Use OS-specific syntax for file prep
       - name: Prepare artifacts
+        shell: bash
+        if: runner.os != 'Windows'
         run: |
           mkdir -p dist
-          BIN="target/${{ matrix.target }}/release/secure_delete${{ matrix.suffix == 'windows' && '.exe' || '' }}"
-          OUT="dist/secure_delete-${{ matrix.suffix }}${{ matrix.suffix == 'windows' && '.exe' || '' }}"
+          BIN="target/${{ matrix.target }}/release/secure_delete"
+          [[ "${{ matrix.suffix }}" == "windows" ]] && BIN="${BIN}.exe"
+          OUT="dist/secure_delete-${{ matrix.suffix }}$( [[ "${{ matrix.suffix }}" == "windows" ]] && echo '.exe' )"
           cp "$BIN" "$OUT"
           ls -lh dist
+
+      - name: Prepare artifacts (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $bin = "target\${{ matrix.target }}\release\secure_delete.exe"
+          $out = "dist\secure_delete-windows.exe"
+          Copy-Item $bin $out -Force
+          Get-ChildItem dist
 
       - name: Ensure zip utility is available
         shell: bash
@@ -56,16 +70,22 @@ jobs:
               sudo apt-get update && sudo apt-get install -y zip
             elif [[ "${{ runner.os }}" == "macOS" ]]; then
               brew install zip || true
-            elif [[ "${{ runner.os }}" == "Windows" ]]; then
-              choco install zip -y || true
             fi
           fi
 
-      - name: Package binaries
+      - name: Package binaries (Linux/macOS)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           cd dist
           zip -r "secure_delete-${{ matrix.suffix }}.zip" ./*
+
+      - name: Package binaries (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path dist\secure_delete-windows.exe -DestinationPath dist\secure_delete-windows.zip
+          Get-ChildItem dist
 
       - name: Generate SHA256 checksum
         shell: bash
@@ -83,19 +103,19 @@ jobs:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
         run: |
           if [[ -n "$GPG_PRIVATE_KEY" ]]; then
-            echo "$GPG_PRIVATE_KEY" | gpg --batch --import || echo "No valid GPG key data found."
+            echo "$GPG_PRIVATE_KEY" | gpg --batch --import || echo "Invalid GPG key data."
           else
             echo "No GPG key provided, skipping import."
           fi
 
-      - name: Sign checksum with GPG (if key provided)
+      - name: Sign checksum (optional)
         shell: bash
         run: |
           cd dist
           if gpg --list-secret-keys | grep -q .; then
             gpg --armor --detach-sign --output "secure_delete-${{ matrix.suffix }}.sha256.asc" "secure_delete-${{ matrix.suffix }}.sha256"
           else
-            echo "No GPG keys available — skipping signature."
+            echo "No GPG key available, skipping signature."
           fi
 
       - name: Upload artifacts
