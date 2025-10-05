@@ -1,13 +1,14 @@
-name: Build and Release (Cross-Platform)
+name: Build and Release
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "src/**"
-      - "Cargo.toml"
+    tags:
+      - 'v*'
   workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual run'
+        required: false
 
 jobs:
   build:
