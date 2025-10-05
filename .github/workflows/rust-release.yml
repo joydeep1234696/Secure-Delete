@@ -55,17 +55,20 @@ jobs:
       - name: Package zip
         run: |
           mkdir -p dist
+          BINARY_PATH="$(pwd)/target/release"
           cd dist
+          
           if [ "$RUNNER_OS" = "Windows" ]; then
             zipname="secure_delete-windows.zip"
-            pwsh -Command "Compress-Archive -Path ..\\target\\release\\secure_delete.exe -DestinationPath $zipname"
+            pwsh -Command "Compress-Archive -Path '${BINARY_PATH}\\secure_delete.exe' -DestinationPath '${PWD}\\${zipname}'"
           elif [ "$RUNNER_OS" = "macOS" ]; then
             zipname="secure_delete-macos.zip"
-            zip -r "$zipname" ../target/release/secure_delete
+            zip -j "$zipname" "$BINARY_PATH/secure_delete"
           else
             zipname="secure_delete-linux.zip"
-            zip -r "$zipname" ../target/release/secure_delete
+            zip -j "$zipname" "$BINARY_PATH/secure_delete"
           fi
+          
           echo "ZIP_NAME=$zipname" >> $GITHUB_ENV
 
       - name: Generate SHA256 checksum
