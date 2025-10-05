@@ -40,7 +40,8 @@ It overwrites data multiple times using configurable patterns (`zeros`, `ones`, 
 ```bash
 git clone https://github.com/whisprer/secure\_delete.git
 cd secure\_delete
-cargo build --release```
+cargo build --release
+```
 The compiled binary will be available at:
 `target/release/secure_delete`
 
@@ -80,13 +81,15 @@ Project structure
 ```secure_delete/
 ├─ Cargo.toml
 └─ src/
-   └─ main.rs```
+   └─ main.rs
+```
 
 Build commands
 ```cargo fmt
 cargo clippy
 cargo test
-cargo build --release```
+cargo build --release
+```
 
 License
 Licensed under the Hybrid License
@@ -104,4 +107,3 @@ Please read SECURITY.md
 Credits
 Created by whisprer (wofl / husklfren)
 Special thanks to G-Petey for code extraction, refactoring, and docs.
-
