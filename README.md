@@ -2,9 +2,9 @@
 <div align="center"><img src="https://github.com/whisprer-specops/secure-delete/blob/main/assets/secure-delete-logo.png?raw=true" width="400" alt="secure delete logo"><p><i>The tool for secure deletion 'n' shredding, (nothing else, but it's good for this!)</i></p></div>
 
 
-\# Secure Delete
+# Secure Delete
 
-\### A minimal, cross-platform, Rust-based file \& folder shredder
+### A minimal, cross-platform, Rust-based file \& folder shredder
 
 `secure\_delete` is a compact CLI tool written in Rust for \*\*secure, irreversible deletion\*\* of files or entire directories.  
 
@@ -14,14 +14,14 @@ It overwrites data multiple times using configurable patterns (`zeros`, `ones`, 
 ---
 
 
-\## Features
+## Features
 
-\- \*\*Cross-platform:\*\* Works on Windows, macOS, and Linux.
-\- \*\*Multi-pass overwrite:\*\* Configurable number of passes (default: 3).
-\- \*\*Configurable patterns:\*\* Choose between `zeros`, `ones`, or `random` fills.
-\- \*\*Recursive directory deletion:\*\* Securely wipes entire folders.
-\- \*\*File rename before removal:\*\* Random filename substitution before unlink.
-\- \*\*Permission handling:\*\* Clears read-only flags before overwrite.
+- \*\*Cross-platform:\*\* Works on Windows, macOS, and Linux.
+- \*\*Multi-pass overwrite:\*\* Configurable number of passes (default: 3).
+- \*\*Configurable patterns:\*\* Choose between `zeros`, `ones`, or `random` fills.
+- \*\*Recursive directory deletion:\*\* Securely wipes entire folders.
+- \*\*File rename before removal:\*\* Random filename substitution before unlink.
+- \*\*Permission handling:\*\* Clears read-only flags before overwrite.
 - \*\*No external dependencies:\*\* Only uses `rand` crate and Rust’s standard library.
 
 ---
@@ -30,12 +30,12 @@ It overwrites data multiple times using configurable patterns (`zeros`, `ones`, 
 
 ---
 
-\## Installation
+## Installation
 
-\### Prerequisites
-\- Rust toolchain (1.70+ recommended)
-\- Cargo
-\### Build
+### Prerequisites
+- Rust toolchain (1.70+ recommended)
+- Cargo
+### Build
 
 ```bash
 git clone https://github.com/whisprer/secure\_delete.git
