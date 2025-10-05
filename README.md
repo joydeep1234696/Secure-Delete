@@ -91,16 +91,16 @@ cargo test
 cargo build --release
 ```
 
-License
+License:
 Licensed under the Hybrid License.
 
-Contributing
+Contributing:
 Pull requests and forks are welcome!
 See CONTRIBUTING.md for style and patch guidelines.
 
-Security
+Security:
 Please read SECURITY.md before reporting vulnerabilities.
 
-Credits
-Created by whisprer (wofl / husklfren)
+Credits:
+Created by whisprer (wofl/husklyfren)
 Special thanks to G-Petey for code extraction, refactoring, and docs.
