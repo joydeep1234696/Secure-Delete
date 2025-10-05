@@ -55,26 +55,28 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp "$BIN" dist/
-          cd dist
+          BIN="target/${{ matrix.target }}/release/secure_delete${{ matrix.os == 'windows-latest' && '.exe' || '' }}"
+          ZIP_NAME="secure_delete-${{ matrix.os == 'windows-latest' && 'windows' || (matrix.os == 'macos-latest' && 'macos' || 'linux') }}.zip"
+          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+
           if [ "$RUNNER_OS" = "Windows" ]; then
-            echo "Detected Windows runner — using PowerShell zip..."
-            pwsh -Command "Compress-Archive -Path $(basename "$BIN") -DestinationPath $env:ZIP_NAME"
+            echo "Using PowerShell compression on Windows"
+            pwsh -Command "Compress-Archive -Path '$BIN' -DestinationPath 'dist/$ZIP_NAME'"
           else
-            echo "Using standard zip..."
-            zip -j "$ZIP_NAME" "$(basename "$BIN")"
+            echo "Using zip on $RUNNER_OS"
+            zip -j "dist/$ZIP_NAME" "$BIN"
           fi
-          ls -lh
+
+          echo "Created archive:"
+          ls -lh dist
 
       - name: Generate SHA256 checksum
         shell: bash
         run: |
-          echo "Current directory: $(pwd)"
-          echo "Listing contents for sanity check:"
-          ls -lh dist
+          echo "Listing dist folder contents before hashing:"
+          ls -lh dist || true
 
           cd dist
-          # Normalize ZIP name from environment
           ZIP_FILE="${{ env.ZIP_NAME }}"
 
           if [ ! -f "$ZIP_FILE" ]; then
