@@ -10,15 +10,15 @@ on:
 
 jobs:
   analyze:
-    name: Analyze (Rust)
+    name: CodeQL Analysis
     runs-on: ubuntu-latest
+
     permissions:
       actions: read
       contents: read
       security-events: write
 
     strategy:
-      fail-fast: false
       matrix:
         language: [ "rust" ]
 
@@ -26,33 +26,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Rust toolchain
+      - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
-          components: rustfmt, clippy
+          components: clippy, rustfmt
 
-      # Initialize CodeQL without autobuild
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: ${{ matrix.language }}
-          # this prevents autobuild from being triggered
-          build-mode: none
-
-      # Manual build step (the key fix)
-      - name: Build the project manually
+      # Step 1: Build manually *before* CodeQL init
+      - name: Manual build (pre-CodeQL)
         run: |
           cargo fetch --locked
           cargo build --release --all-features
 
-      # Optional static analysis
-      - name: Run Clippy for linting
+      # Step 2: Initialize CodeQL with no autobuild
+      - name: Initialize CodeQL (no autobuild)
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+
+      # Step 3: Run Clippy
+      - name: Run Clippy linter
         run: cargo clippy --all-targets --all-features -- -D warnings
 
-      # Run the CodeQL analysis
+      # Step 4: Analyze
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{matrix.language}}"
+
