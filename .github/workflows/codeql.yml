@@ -1,56 +1,41 @@
-name: "CodeQL (Rust)"
+name: CodeQL (Rust)
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
   schedule:
-    - cron: '0 2 * * 0' # Weekly
+    - cron: '13 3 * * 3'   # weekly, random minute/hour
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  security-events: write
 
 jobs:
   analyze:
-    name: Analyze
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        language: [rust]
-
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
+    name: Analyze (Rust)
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          components: clippy, rustfmt
+      # Optional: keep dependencies in sync for the repo,
+      # but do NOT build here (CodeQL uses build-mode: none)
+      - name: Install Rust toolchain (stable)
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: Install dependencies
-        run: |
-          rustup component add clippy rustfmt
-          cargo fetch
-
-      - name: Initialize CodeQL
+      - name: CodeQL init (Rust, build-mode: none)
         uses: github/codeql-action/init@v3
         with:
-          languages: ${{ matrix.language }}
-          build-mode: manual
+          languages: rust
+          build-mode: none
 
-      - name: Build the project (manual build for Rust)
-        run: |
-          cargo build --release
+      # No build step here – Rust extractor doesn't want it
 
-      - name: Run tests (optional)
-        run: cargo test --all --release
-
-      - name: Perform CodeQL Analysis
+      - name: CodeQL analyze
         uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:rust"
