@@ -57,7 +57,13 @@ jobs:
           mkdir -p dist
           cp "$BIN" dist/
           cd dist
-          zip -j "$ZIP_NAME" "$(basename "$BIN")"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            echo "Detected Windows runner — using PowerShell zip..."
+            pwsh -Command "Compress-Archive -Path $(basename "$BIN") -DestinationPath $env:ZIP_NAME"
+          else
+            echo "Using standard zip..."
+            zip -j "$ZIP_NAME" "$(basename "$BIN")"
+          fi
           ls -lh
 
       - name: Generate SHA256 checksum
