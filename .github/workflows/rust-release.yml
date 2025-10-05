@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build and Package (${{ matrix.os }}, ${{ matrix.target }})
+    name: Build (${{ matrix.os }}, ${{ matrix.target }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -21,19 +21,19 @@ jobs:
             target: x86_64-pc-windows-msvc
 
     steps:
-      - name: Checkout source
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Rust
+      - name: Install Rust
         uses: actions/setup-rust@v2
         with:
           rust-version: stable
           target: ${{ matrix.target }}
 
-      - name: Build release binary
+      - name: Build release
         run: cargo build --release --target ${{ matrix.target }}
 
-      # --- Windows: use PowerShell Compress-Archive ---
+      # WINDOWS
       - name: Package (Windows)
         if: matrix.os == 'windows-latest'
         shell: pwsh
@@ -41,50 +41,34 @@ jobs:
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           Copy-Item "target\x86_64-pc-windows-msvc\release\secure_delete.exe" "dist\secure_delete.exe"
           Compress-Archive -Path "dist\secure_delete.exe" -DestinationPath "dist\secure_delete-windows.zip"
-          Write-Host "✅ Windows zip package created successfully."
+          Get-ChildItem dist
 
-      # --- macOS/Linux: use zip ---
+      # LINUX + MACOS
       - name: Package (Unix)
         if: matrix.os != 'windows-latest'
         shell: bash
         run: |
           mkdir -p dist
-          cp "target/${{ matrix.target }}/release/secure_delete" dist/
+          cp target/${{ matrix.target }}/release/secure_delete dist/
           if [ "${{ matrix.os }}" = "macos-latest" ]; then
             zip -j dist/secure_delete-macos.zip dist/secure_delete
           else
             zip -j dist/secure_delete-linux.zip dist/secure_delete
           fi
-          echo "✅ Unix zip package created successfully."
+          ls -lh dist
 
-      - name: Generate SHA256 checksum
+      - name: SHA256 checksum
         shell: bash
         run: |
           cd dist
           for f in *.zip; do
-            base_name=$(basename "$f" .zip)
-            sha256sum "$f" > "${base_name}.sha256"
+            sha256sum "$f" > "${f%.zip}.sha256"
           done
-
-      - name: Import GPG key
-        if: env.GPG_PRIVATE_KEY != ''
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-        shell: bash
-        run: |
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
-
-      - name: Sign artifacts
-        if: env.GPG_PRIVATE_KEY != ''
-        shell: bash
-        run: |
-          cd dist
-          for f in *.zip *.sha256; do
-            gpg --batch --yes --detach-sign --armor "$f"
-          done
+          ls -lh
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: secure_delete-${{ matrix.os }}
           path: dist/*
+
