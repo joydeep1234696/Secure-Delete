@@ -40,14 +40,14 @@ jobs:
         run: cargo build --release --target ${{ matrix.target }}
 
       # Fix: Use OS-specific syntax for file prep
-      - name: Prepare artifacts
-        shell: bash
+      - name: Prepare artifacts (Linux/macOS)
         if: runner.os != 'Windows'
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p dist
           BIN="target/${{ matrix.target }}/release/secure_delete"
-          [[ "${{ matrix.suffix }}" == "windows" ]] && BIN="${BIN}.exe"
-          OUT="dist/secure_delete-${{ matrix.suffix }}$( [[ "${{ matrix.suffix }}" == "windows" ]] && echo '.exe' )"
+          OUT="dist/secure_delete-${{ matrix.suffix }}"
           cp "$BIN" "$OUT"
           ls -lh dist
 
