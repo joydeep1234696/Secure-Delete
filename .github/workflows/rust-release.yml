@@ -41,10 +41,12 @@ jobs:
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           Copy-Item "target\x86_64-pc-windows-msvc\release\secure_delete.exe" "dist\secure_delete.exe"
           Compress-Archive -Path "dist\secure_delete.exe" -DestinationPath "dist\secure_delete-windows.zip"
+          Write-Host "✅ Windows zip package created successfully."
 
       # --- macOS/Linux: use zip ---
       - name: Package (Unix)
         if: matrix.os != 'windows-latest'
+        shell: bash
         run: |
           mkdir -p dist
           cp "target/${{ matrix.target }}/release/secure_delete" dist/
@@ -53,6 +55,7 @@ jobs:
           else
             zip -j dist/secure_delete-linux.zip dist/secure_delete
           fi
+          echo "✅ Unix zip package created successfully."
 
       - name: Generate SHA256 checksum
         shell: bash
