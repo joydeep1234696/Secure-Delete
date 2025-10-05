@@ -1,0 +1,125 @@
+name: Build and Release Secure Delete
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }}, ${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Set environment variables
+        shell: bash
+        run: |
+          mkdir -p dist
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            echo "ZIP_NAME=secure_delete-windows.zip" >> $GITHUB_ENV
+            echo "BIN=target/${{ matrix.target }}/release/secure_delete.exe" >> $GITHUB_ENV
+          elif [ "$RUNNER_OS" = "macOS" ]; then
+            echo "ZIP_NAME=secure_delete-macos.zip" >> $GITHUB_ENV
+            echo "BIN=target/${{ matrix.target }}/release/secure_delete" >> $GITHUB_ENV
+          else
+            echo "ZIP_NAME=secure_delete-linux.zip" >> $GITHUB_ENV
+            echo "BIN=target/${{ matrix.target }}/release/secure_delete" >> $GITHUB_ENV
+          fi
+
+      - name: Package binaries
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp "$BIN" dist/
+          cd dist
+          zip -j "$ZIP_NAME" "$(basename "$BIN")"
+          ls -lh
+
+      - name: Generate SHA256 checksum
+        shell: bash
+        run: |
+          cd dist
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            shasum -a 256 "$ZIP_NAME" > "${ZIP_NAME%.zip}.sha256"
+          else
+            sha256sum "$ZIP_NAME" > "${ZIP_NAME%.zip}.sha256"
+          fi
+
+      - name: Import GPG key
+        if: env.GPG_PRIVATE_KEY != ''
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        shell: bash
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import || true
+          gpg --list-keys || true
+
+      - name: Sign artifacts (optional)
+        if: env.GPG_PRIVATE_KEY != ''
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        shell: bash
+        run: |
+          cd dist
+          for f in "$ZIP_NAME" "${ZIP_NAME%.zip}.sha256"; do
+            [ -f "$f" ] && gpg --batch --yes --detach-sign --armor "$f" || true
+          done
+          ls -lh
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: secure_delete-${{ matrix.os }}
+          path: dist/*
+
+  release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release_artifacts
+
+      - name: Display artifact contents
+        run: ls -R release_artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release_artifacts/**/*.zip
+            release_artifacts/**/*.sha256
+            release_artifacts/**/*.asc
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
