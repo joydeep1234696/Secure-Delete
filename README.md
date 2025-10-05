@@ -1,5 +1,5 @@
 # Secure-Delete
-<div align="center"><img src="https://github.com/whispr-specops/secure-delete/blob/main/assets/secure-delete-logo.png?raw=true" width="400" alt="secure delete logo"><p><i>The tool for deletion 'n shredding nothing else, but it's good for this!</i></p></div>
+<div align="center"><img src="https://github.com/whisprer-specops/secure-delete/blob/main/assets/secure-delete-logo.png?raw=true" width="400" alt="secure delete logo"><p><i>The tool for secure deletion 'n' shredding, (nothing else, but it's good for this!)</i></p></div>
 
 
 \# Secure Delete
