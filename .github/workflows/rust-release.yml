@@ -54,18 +54,24 @@ jobs:
 
       - name: Package zip
         run: |
+          mkdir -p dist
+          cd dist
           if [ "$RUNNER_OS" = "Windows" ]; then
-            pwsh -Command "Compress-Archive -Path dist\* -DestinationPath dist\secure_delete-${{ matrix.target }}.zip"
+            zipname="secure_delete-windows.zip"
+            pwsh -Command "Compress-Archive -Path ..\\target\\release\\secure_delete.exe -DestinationPath $zipname"
+          elif [ "$RUNNER_OS" = "macOS" ]; then
+            zipname="secure_delete-macos.zip"
+            zip -r "$zipname" ../target/release/secure_delete
           else
-            zip -r dist/secure_delete-${{ matrix.target }}.zip dist/*
+            zipname="secure_delete-linux.zip"
+            zip -r "$zipname" ../target/release/secure_delete
           fi
-        shell: bash
+          echo "ZIP_NAME=$zipname" >> $GITHUB_ENV
 
       - name: Generate SHA256 checksum
-        shell: bash
         run: |
           cd dist
-          sha256sum "${{ matrix.artifact_name }}.zip" > "${{ matrix.artifact_name }}.sha256"
+          sha256sum "$ZIP_NAME" > "${ZIP_NAME%.zip}.sha256"
 
       - name: Import GPG key
         if: env.GPG_PRIVATE_KEY != ''
